@@ -1,0 +1,36 @@
+use <lib/badges.rcad>
+
+W = 800;
+H = 500;
+canvas(W, H, bg = "#f4f1ea");
+
+// Title
+color("#333")
+    translate([W / 2, 70])
+        text("rasterCAD", size = 48, font = "serif:style=Bold", halign = "center", valign = "center");
+
+// A row of badges from a library module, generated in a loop
+labels = ["alpha", "beta", "stable"];
+fills  = ["tomato", "goldenrod", "seagreen"];
+for (i = [0 : len(labels) - 1])
+    translate([W / 2 + (i - 1) * 220, 190])
+        shadow() badge(labels[i], fill = fills[i]);
+
+// Rotation: a fan of rounded bars
+translate([200, 360])
+    for (a = [0 : 30 : 359])
+        rotate(a) color([a / 360, 0.4, 1 - a / 360]) rect([90, 8], r = 4);
+
+// A star polygon built with a list comprehension
+function star(n, r1, r2) = [
+    for (i = [0 : 2 * n - 1])
+        let (r = i % 2 == 0 ? r1 : r2, a = i * 180 / n - 90)
+            [r * cos(a), r * sin(a)]
+];
+
+translate([600, 360]) {
+    color("gold") polygon(star(5, 90, 38));
+    color("#333") stroke(3) polygon(star(5, 90, 38));
+}
+
+echo("rendered", W, "x", H);

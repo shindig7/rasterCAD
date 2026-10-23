@@ -1,0 +1,15 @@
+// Reusable badge templates.  Import with:  use <lib/badges.rcad>
+
+badge_font = "sans-serif:style=Bold";
+
+// A pill-shaped badge with centered text, centered on the origin.
+module badge(label, w = 160, h = 48, fill = "steelblue", ink = "white") {
+    color(fill) rect([w, h], center = true, r = h / 2);
+    color(ink) text(label, size = h * 0.42, font = badge_font, halign = "center", valign = "center");
+}
+
+// Soft drop shadow behind any children.
+module shadow(offset = [4, 6], r = 4, alpha = 0.35) {
+    opacity(alpha) blur(r) translate(offset) color("black") children();
+    children();
+}
