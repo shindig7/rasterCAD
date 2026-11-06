@@ -6,6 +6,7 @@ OpenSCAD-style scripts that render 2D raster images. Coordinates are in pixels, 
 cargo build --release
 ./target/release/rastercad examples/badges.rcad              # editor + live preview
 ./target/release/rastercad examples/badges.rcad -o out.png   # headless render
+./target/release/rastercad --guide                           # print the language guide
 ```
 
 Editor keys: **F5** render, **Ctrl+S** save and render, **Ctrl+E** export PNG, **Ctrl+O** / **Ctrl+N** open / new. In the preview, scroll to zoom and drag to pan. The corner readout shows the canvas x, y and the color under the cursor. Click an error to jump to its line.

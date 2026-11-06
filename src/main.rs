@@ -6,7 +6,8 @@ mod gui;
 const USAGE: &str = "\
 usage:
   rastercad [FILE.rcad]             open the editor
-  rastercad FILE.rcad -o OUT.png    render to a PNG without opening a window";
+  rastercad FILE.rcad -o OUT.png    render to a PNG without opening a window
+  rastercad --guide                 print the language guide (Markdown)";
 
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
@@ -14,6 +15,10 @@ fn main() -> ExitCode {
         [] => gui::run(None),
         [flag] if flag == "-h" || flag == "--help" => {
             println!("{USAGE}");
+            ExitCode::SUCCESS
+        }
+        [flag] if flag == "--guide" => {
+            print!("{}", include_str!("../docs/GUIDE.md"));
             ExitCode::SUCCESS
         }
         [file] => gui::run(Some(PathBuf::from(file))),
