@@ -22,7 +22,7 @@ The syntax and semantics follow OpenSCAD: variables, `function f(x) = ...;`, `mo
 | `rect(size, center=false, r=0)` | `size` is a number or `[w, h]`. `r` is the corner radius. |
 | `circle(r)` / `circle(d=)`, `ellipse([rx, ry])` | Centered on the origin. |
 | `polygon(points)`, `line(from, to, width=1)` | |
-| `text(t, size=16, font="sans-serif", halign="left", valign="baseline", color, outline_thickness=0, outline_color="black")` | `font`: `"DejaVu Sans:style=Bold Italic"`, `serif`/`monospace`, or a `.ttf` path. Fonts in `~/.config/rasterCAD/fonts` work by family or file name. |
+| `text(t, size=16, font="sans-serif", halign="left", valign="baseline", color, outline_thickness=0, outline_color="black", width)` | `font`: `"DejaVu Sans:style=Bold Italic"`, `serif`/`monospace`, or a `.ttf` path. Fonts in `~/.config/rasterCAD/fonts` work by family or file name. `width` wraps lines at that many pixels. `halign="justify"` needs it. |
 | `image(file, size=[w, h], center=false)` | PNG/JPEG/etc. If one entry of `size` is `undef`, the aspect ratio is kept. |
 | `translate([x, y])`, `rotate(a, center=[x, y])`, `scale(s or [sx, sy])`, `mirror([x, y])` | Positive rotation is clockwise on screen. |
 | `color(c, alpha)` | Any CSS color (`"steelblue"`, `"#ff000080"`, `"hsl(...)"`) or `[r, g, b, a]` in 0..1. |

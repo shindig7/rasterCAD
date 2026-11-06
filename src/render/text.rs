@@ -7,8 +7,8 @@ use std::sync::{Arc, LazyLock, Mutex};
 
 use cosmic_text::fontdb::{ID, Source};
 use cosmic_text::{
-    Attrs, Buffer, CacheKey, CacheKeyFlags, Command, Family, FontSystem, Metrics, Shaping, Style,
-    SwashCache, Weight,
+    Align, Attrs, Buffer, CacheKey, CacheKeyFlags, Command, Family, FontSystem, Metrics, Shaping,
+    Style, SwashCache, Weight,
 };
 use tiny_skia::{Path, PathBuilder};
 
@@ -17,6 +17,7 @@ pub enum HAlign {
     Left,
     Center,
     Right,
+    Justify,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -34,6 +35,8 @@ pub struct TextStyle<'a> {
     pub font: &'a str,
     pub halign: HAlign,
     pub valign: VAlign,
+    /// Wraps lines at this width. `HAlign::Justify` stretches lines to it, so it needs one.
+    pub width: Option<f32>,
 }
 
 struct Fonts {
@@ -151,6 +154,14 @@ pub fn text_path(text: &str, style: &TextStyle, base_dir: &FsPath) -> Result<Opt
     if !(style.size > 0.0 && style.size.is_finite()) {
         return Err(format!("text size must be positive, got {}", style.size));
     }
+    if let Some(w) = style.width
+        && !(w > 0.0 && w.is_finite())
+    {
+        return Err(format!("text width must be positive, got {w}"));
+    }
+    if style.halign == HAlign::Justify && style.width.is_none() {
+        return Err("halign=\"justify\" needs a width".to_string());
+    }
     let mut guard = FONTS.lock().unwrap_or_else(|e| e.into_inner());
     guard.load_user_fonts();
     let (family, weight, font_style) = resolve_font(&mut guard, style.font, base_dir)?;
@@ -167,13 +178,14 @@ pub fn text_path(text: &str, style: &TextStyle, base_dir: &FsPath) -> Result<Opt
     };
 
     let mut buffer = Buffer::new_empty(Metrics::new(style.size, style.size * 1.2));
-    buffer.set_size(None, None);
+    buffer.set_size(style.width, None);
     let attrs = Attrs::new()
         .family(family)
         .weight(weight)
         .style(font_style)
         .cache_key_flags(CacheKeyFlags::DISABLE_HINTING);
-    buffer.set_text(&text.replace("{-}", "—"), &attrs, Shaping::Advanced, None);
+    let align = (style.halign == HAlign::Justify).then_some(Align::Justified);
+    buffer.set_text(&text.replace("{-}", "—"), &attrs, Shaping::Advanced, align);
     buffer.shape_until_scroll(fonts, false);
 
     let runs: Vec<_> = buffer.layout_runs().collect();
@@ -190,10 +202,16 @@ pub fn text_path(text: &str, style: &TextStyle, base_dir: &FsPath) -> Result<Opt
 
     let mut pb = PathBuilder::new();
     for run in &runs {
+        // Right-to-left lines are laid out against the right edge of `width`.
+        let start = style
+            .width
+            .filter(|_| run.rtl)
+            .map_or(0.0, |w| w - run.line_w);
         let dx = match style.halign {
-            HAlign::Left => 0.0,
-            HAlign::Center => -run.line_w / 2.0,
-            HAlign::Right => -run.line_w,
+            HAlign::Left => -start,
+            HAlign::Center => -start - run.line_w / 2.0,
+            HAlign::Right => -start - run.line_w,
+            HAlign::Justify => 0.0,
         };
         for glyph in run.glyphs {
             let (key, _, _) = CacheKey::new(

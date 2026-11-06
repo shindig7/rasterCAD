@@ -628,6 +628,7 @@ impl Evaluator {
                 "color",
                 "outline_thickness",
                 "outline_color",
+                "width",
             ],
             "image" => &["file", "size", "center"],
             "translate" => &["v"],
@@ -765,7 +766,10 @@ impl Evaluator {
                     None | Some("left") => HAlign::Left,
                     Some("center") => HAlign::Center,
                     Some("right") => HAlign::Right,
-                    Some(_) => return Err(a.type_err(3, "\"left\", \"center\" or \"right\"")),
+                    Some("justify") => HAlign::Justify,
+                    Some(_) => {
+                        return Err(a.type_err(3, "\"left\", \"center\", \"right\" or \"justify\""));
+                    }
                 };
                 let valign = match a.str(4)?.as_deref() {
                     None | Some("baseline") => VAlign::Baseline,
@@ -784,6 +788,7 @@ impl Evaluator {
                     font: font.as_deref().unwrap_or("sans-serif"),
                     halign,
                     valign,
+                    width: a.num(8)?.map(|w| w as f32),
                 };
                 let Some(path) = text::text_path(&content, &style, &self.base_dir(span))
                     .map_err(|m| Error::new(span, format!("text(): {m}")))?

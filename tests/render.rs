@@ -171,6 +171,71 @@ fn text_renders_glyphs() {
 }
 
 #[test]
+fn text_alignment_and_wrapping() {
+    // The (min, max) x of the ink in rows y0..y1.
+    let ink = |p: &Pixmap, y0: u32, y1: u32| {
+        let dark: Vec<u32> = (0..p.width())
+            .filter(|&x| (y0..y1).any(|y| px(p, x, y)[0] < 128))
+            .collect();
+        (dark[0], *dark.last().unwrap())
+    };
+    let para = |origin: i32, args: &str| {
+        ok(&format!(
+            r#"canvas(240, 60, bg="white"); translate([{origin}, 0])
+            text("aa bb cc dd ee ff gg hh ii jj kk ll", size=16, valign="top", width=200{args});"#
+        ))
+    };
+    let first_line = 0..18;
+
+    // Wrapped lines are aligned against the origin, like unwrapped ones.
+    let left = para(20, "");
+    let (l, _) = ink(&left, first_line.start, first_line.end);
+    assert!((20..24).contains(&l), "got {l}");
+    let (_, r) = ink(
+        &para(220, r#", halign="right""#),
+        first_line.start,
+        first_line.end,
+    );
+    assert!((216..=220).contains(&r), "got {r}");
+    let (l, r) = ink(
+        &para(120, r#", halign="center""#),
+        first_line.start,
+        first_line.end,
+    );
+    assert!((l + r).abs_diff(240) <= 4, "got {l}..{r}");
+
+    // Justified lines reach both edges, except the last one.
+    let just = para(20, r#", halign="justify""#);
+    let (l, r) = ink(&just, first_line.start, first_line.end);
+    assert!(
+        (20..24).contains(&l) && (216..=220).contains(&r),
+        "got {l}..{r}"
+    );
+    assert_eq!(ink(&just, 20, 40), ink(&left, 20, 40));
+
+    // Right-to-left paragraphs too: Hebrew reads from the right edge.
+    let hebrew = |args: &str| {
+        ok(&format!(
+            r#"canvas(240, 60, bg="white"); translate([220, 0])
+            text("אב גד הו זח טי כל מנ", size=16, valign="top", width=120{args});"#
+        ))
+    };
+    let (_, r) = ink(&hebrew(r#", halign="right""#), 0, 18);
+    assert!((216..=220).contains(&r), "got {r}");
+
+    assert!(
+        err(r#"canvas(9, 9); text("x", halign="justify");"#)
+            .msg
+            .contains("needs a width")
+    );
+    assert!(
+        err(r#"canvas(9, 9); text("x", width=0);"#)
+            .msg
+            .contains("must be positive")
+    );
+}
+
+#[test]
 fn libraries_use_and_include() {
     let dir = temp_dir("libs");
     std::fs::create_dir_all(dir.join("lib")).unwrap();

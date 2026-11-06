@@ -82,10 +82,12 @@ line([0, 0], [100, 40], width=3);
 
 | Call | Notes |
 |---|---|
-| `text(t, size=16, font="sans-serif", halign="left", valign="baseline", color, outline_thickness=0, outline_color="black")` | Draws `t` with its anchor at the origin. |
+| `text(t, size=16, font="sans-serif", halign="left", valign="baseline", color, outline_thickness=0, outline_color="black", width)` | Draws `t` with its anchor at the origin. |
 
 - `{-}` in the text draws an em dash (—)
-- `halign`: `"left"`, `"center"`, `"right"`
+- `halign`: `"left"`, `"center"`, `"right"`, `"justify"`. Each line is aligned against the origin
+- `width` wraps lines at that many pixels. Text stays on one line per `\n` without it
+- `"justify"` needs `width`. It runs from the origin to `width`, stretching the spaces between words. The last line of a paragraph is left as it is
 - `valign`: `"top"`, `"center"`, `"baseline"`, `"bottom"`
 - `font`: `"sans-serif"`, `"serif"`, `"monospace"`, an installed family like `"DejaVu Sans"`, or a `.ttf`/`.otf` file name or path
 - Your own fonts: put `.ttf`/`.otf`/`.ttc` files in `~/.config/rasterCAD/fonts`. Use them by family name or file name from any script. In the editor, Insert → Font lists them and inserts `font="..."` at the cursor
@@ -99,6 +101,7 @@ line([0, 0], [100, 40], width=3);
 ```
 translate([200, 50]) text("Title", size=36, font="serif:style=Bold", halign="center", valign="top");
 translate([200, 150]) text("SALE", size=48, color="yellow", outline_thickness=3, outline_color="black");
+translate([20, 220]) text("A longer paragraph that wraps at the width and fills it edge to edge.", size=16, halign="justify", width=360);
 ```
 
 ## Images
